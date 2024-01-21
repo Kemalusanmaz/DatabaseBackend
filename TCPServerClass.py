@@ -2,8 +2,11 @@ import socket
 import json
 import pymongo
 import threading
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+import os
 
 from databaseClass import dBClient
+from influxDbClass import influxDbClass
 
 #Server Class to communicate between Gateway and UGKB 
 class gatewayServer: # This is a server which manages TCP/IP Server side.
@@ -74,7 +77,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
             print(f"Sunucu {self.server_ip_address}:{self.server_port} soketi kapatılamamıştır.\n{ex}")
 
      #Function of spliting data from Labview Client to sending database
-    def splitDataToDB_1(self,interface,dbname,collectionName,seperator):
+    def splitDataToMongoDb_1(self,interface,dbname,collectionName,seperator):
         if self.dataSplit.startswith(interface): # if received data starts with interface argument
             dataSplit = self.dataSplit.split(seperator) #split the data as regard seperator
 
@@ -94,11 +97,11 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
             resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
             JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
             
-            db = dBClient(dbname,collectionName) #define database client as db
+            mongoDb = dBClient(dbname,collectionName) #define database client as db
             
-            return db.insertRecord(JSONtoString) #insert data to the database
+            return mongoDb.insertRecord(JSONtoString) #insert data to the database
         
-    def splitDataToDB_2(self,interface,dbname,collectionName,keyname,dataIndex,seperator):
+    def splitDataToMongoDb_2(self,interface,dbname,collectionName,keyname,dataIndex,seperator):
         if self.dataSplit.startswith(interface): # if received data starts with interface argument
             dataSplit = self.dataSplit.split(";") #split the data as regard seperator
             result = { #the data is converted json format
@@ -116,9 +119,31 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
             resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
             JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
             
-            db = dBClient(dbname,collectionName) #define database client as db
+            mongoDb = dBClient(dbname,collectionName) #define database client as db
+                        
+            return mongoDb.insertRecord(JSONtoString) #insert data to the database
+        
+    def sendDataToInfluxDb(self,interface):
+        # token = os.environ.get("INFLUXDB_TOKEN") #token bilgisi environment variable'e kaydedilmişti. os paketinden çekilir.
+        token = "Ow9zVHjndViYOZBgDKq2GZYuH_AhfM5FrxHc0vuvkLpIcSneB4Cg6FAhSAQOnRGImA3LPxypVmwQiKleh604Jg=="
+        org = "TAI"
+        url = "http://localhost:8086"
+        bucket = "lemon"
+
+        # influxDbClass sınıfının örneğini oluştur
+        self.influxdatabase= influxDbClass(token, org, url, bucket)
+        self.influxdatabase.connectDb()
+        
+        if self.dataSplit.startswith(interface):
+            # print("Doğru")
+            dataSplit = self.dataSplit.split(",")
+            print(dataSplit)
             
-            return db.insertRecord(JSONtoString) #insert data to the database
+            self.influxdatabase.writeData(dataSplit[0],dataSplit[1],dataSplit[2],dataSplit[3],dataSplit[4],dataSplit[5])
+
+
+        
+
 
     #Function is used for threading.
     def handle_client(self,conn,addr):
@@ -134,22 +159,41 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
                     if dataSplit == "exit": #If the splitted data is exit, break the loop, close the Server socket via closeSocket method in the Server class 
                         connected = False
                         self.closeSocket()
+                        self.influxdatabase.disconnectDb()
+                        
                         break
 
                     else: #otherwise
                         self.dataSplit = str(dataSplit) #datasplit variable is converted self to using other methods in the class
 
                         if self.dataSplit != None: #if the datasplit variable is not null, call the splitDatatoDB method to sending data to defined collection in the database 
-                            self.splitDataToDB_1("Torque","ReactionWheelDB","Torque TC",",") 
-                            self.splitDataToDB_1("Tacho","ReactionWheelDB","Tachometer TM",",")
-                            self.splitDataToDB_1("Dir","ReactionWheelDB","Direction of Rotation TM",",")
-                            self.splitDataToDB_1("Asm","AnalogSensorDB","Analog Sensor Monitor TM",",")
-                            self.splitDataToDB_1("Pt","AnalogSensorDB","Pressure Transducer TM",",")
-                            self.splitDataToDB_1("Anv","AnalogSensorDB","ANV TM",",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
-                            self.splitDataToDB_2("Hpc","DigitalInterfacesDB","HPC","HPC",4,",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
-                                                                                                # 4-> key name for results 5-> seperator index 6-> seperator string
-                            self.splitDataToDB_2("Bsm","DigitalInterfacesDB","BSM","BSM",1,":")
-                            self.splitDataToDB_2("Bdm","DigitalInterfacesDB","BDM","BDM",1,"/")
+                            
+                            # self.mongoDbData()
+                            self.influxDbData()
+
+                            
+                    
         except Exception as ex:
             print("Threat fonksiyonunda bir hata oluştu.",ex)        
-         
+
+
+    # def mongoDbData():
+        # self.splitDataToMongoDb_1("Torque","ReactionWheelDB","Torque TC",",") 
+        # self.splitDataToMongoDb_1("Tacho","ReactionWheelDB","Tachometer TM",",")
+        # self.splitDataToMongoDb_1("Dir","ReactionWheelDB","Direction of Rotation TM",",")
+        # self.splitDataToMongoDb_1("Asm","AnalogSensorDB","Analog Sensor Monitor TM",",")
+        # self.splitDataToMongoDb_1("Pt","AnalogSensorDB","Pressure Transducer TM",",")
+        # self.splitDataToMongoDb_1("Anv","AnalogSensorDB","ANV TM",",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
+        # self.splitDataToMongoDb_1("Hpc","DigitalInterfacesDB","HPC","HPC",4,",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
+        #                                                                     # 4-> key name for results 5-> seperator index 6-> seperator string
+        # self.splitDataToMongoDb_2("Bsm","DigitalInterfacesDB","BSM","BSM",1,":")
+        # self.splitDataToMongoDb_2("Bdm","DigitalInterfacesDB","BDM","BDM",1,"/")
+
+    def influxDbData(self):
+        self.sendDataToInfluxDb("Torque")
+        self.sendDataToInfluxDb("Tacho")
+        self.sendDataToInfluxDb("DIR")
+
+
+
+        
