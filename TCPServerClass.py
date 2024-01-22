@@ -95,8 +95,9 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
 
 
             resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
+            # print(resultToJSON)
             JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
-            
+            # print(JSONtoString)
             mongoDb = dBClient(dbname,collectionName) #define database client as db
             
             return mongoDb.insertRecord(JSONtoString) #insert data to the database
@@ -125,10 +126,10 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         
     def sendDataToInfluxDb(self,interface):
         # token = os.environ.get("INFLUXDB_TOKEN") #token bilgisi environment variable'e kaydedilmişti. os paketinden çekilir.
-        token = "Ow9zVHjndViYOZBgDKq2GZYuH_AhfM5FrxHc0vuvkLpIcSneB4Cg6FAhSAQOnRGImA3LPxypVmwQiKleh604Jg=="
-        org = "TAI"
+        token = "0f48ad9a1c4a43af9643a3c77f6dc4b42df38ffe0d0368551629082a567e5587"
+        org = "tai"
         url = "http://localhost:8086"
-        bucket = "lemon"
+        bucket = "labview"
 
         # influxDbClass sınıfının örneğini oluştur
         self.influxdatabase= influxDbClass(token, org, url, bucket)
@@ -168,7 +169,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
 
                         if self.dataSplit != None: #if the datasplit variable is not null, call the splitDatatoDB method to sending data to defined collection in the database 
                             
-                            # self.mongoDbData()
+                            self.mongoDbData()
                             self.influxDbData()
 
                             
@@ -177,22 +178,26 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
             print("Threat fonksiyonunda bir hata oluştu.",ex)        
 
 
-    # def mongoDbData():
-        # self.splitDataToMongoDb_1("Torque","ReactionWheelDB","Torque TC",",") 
-        # self.splitDataToMongoDb_1("Tacho","ReactionWheelDB","Tachometer TM",",")
-        # self.splitDataToMongoDb_1("Dir","ReactionWheelDB","Direction of Rotation TM",",")
-        # self.splitDataToMongoDb_1("Asm","AnalogSensorDB","Analog Sensor Monitor TM",",")
-        # self.splitDataToMongoDb_1("Pt","AnalogSensorDB","Pressure Transducer TM",",")
-        # self.splitDataToMongoDb_1("Anv","AnalogSensorDB","ANV TM",",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
-        # self.splitDataToMongoDb_1("Hpc","DigitalInterfacesDB","HPC","HPC",4,",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
-        #                                                                     # 4-> key name for results 5-> seperator index 6-> seperator string
-        # self.splitDataToMongoDb_2("Bsm","DigitalInterfacesDB","BSM","BSM",1,":")
-        # self.splitDataToMongoDb_2("Bdm","DigitalInterfacesDB","BDM","BDM",1,"/")
+    def mongoDbData(self):
+        self.splitDataToMongoDb_1("Torque","ReactionWheelDB","Torque TC",",") 
+        self.splitDataToMongoDb_1("Tacho","ReactionWheelDB","Tachometer TM",",")
+        self.splitDataToMongoDb_1("Dir","ReactionWheelDB","Direction of Rotation TM",",")
+        self.splitDataToMongoDb_1("Asm","AnalogSensorDB","Analog Sensor Monitor TM",",")
+        self.splitDataToMongoDb_1("Pt","AnalogSensorDB","Pressure Transducer TM",",")
+        self.splitDataToMongoDb_1("Anv","AnalogSensorDB","ANV TM",",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
+        self.splitDataToMongoDb_2("Hpc","DigitalInterfacesDB","HPC","HPC",4,",") #The Method takes some arguments 1-> Interface Name 2-> Database Name from MongoDB 3-> Collection Name from MongoDB
+                                                                            # 4-> key name for results 5-> seperator index 6-> seperator string
+        self.splitDataToMongoDb_2("Bsm","DigitalInterfacesDB","BSM","BSM",1,":")
+        self.splitDataToMongoDb_2("Bdm","DigitalInterfacesDB","BDM","BDM",1,"/")
 
     def influxDbData(self):
         self.sendDataToInfluxDb("Torque")
         self.sendDataToInfluxDb("Tacho")
-        self.sendDataToInfluxDb("DIR")
+        self.sendDataToInfluxDb("Dir")
+        self.sendDataToInfluxDb("Asm")
+        self.sendDataToInfluxDb("Anv")
+        self.sendDataToInfluxDb("Pt")
+        self.sendDataToInfluxDb("Pt")
 
 
 

@@ -16,8 +16,8 @@ def runSequence(serverIPAddress,serverPort):
     print(f"Active Connections: {threading.active_count() - 1}") #active threats are shown with threading.active_count method
     # return serverInterface
     
-serverIPAddress = "localhost" #local IP address.This variable needs to be local address where run Labview
-serverPort = 1000 #local port. This variable needs to add UGKB configuration
+serverIPAddress = "10.41.74.21" #local IP address.This variable needs to be local address where run Labview
+serverPort = 1234 #local port. This variable needs to add UGKB configuration
 
 runSequence(serverIPAddress,serverPort)
 

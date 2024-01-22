@@ -35,8 +35,6 @@ class influxDbClass:
             write_api = self.write_client.write_api(write_options=SYNCHRONOUS)
             point = (
                 Point(interface)
-                .tag("date", date)
-                .tag("timestamp", time)
                 .field("value1", float(value1))
                 .field("value2", float(value2))
                 .field("value3", float(value3))
