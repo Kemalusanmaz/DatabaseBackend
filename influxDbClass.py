@@ -6,7 +6,7 @@ import subprocess
 
 class influxDbClass:
 
-    subprocess.run(r'C:\Users\kemal\Downloads\influxdb2-2.7.4-windows\influxd.exe')
+    # subprocess.run(r'C:\Users\kemal\Downloads\influxdb2-2.7.4-windows\influxd.exe')
 
   
     def __init__(self,token,org,url,bucket):
