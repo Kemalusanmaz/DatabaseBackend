@@ -1,8 +1,10 @@
 import pymongo
 
+from conf import Configuration as conf
+
 class dBClient: # A database class is made to manage structure
 
-    db = pymongo.MongoClient("mongodb://localhost:27017/") # define database server with MongoClient. This works in localhost. db variale can can call with dBclient.db
+    db = pymongo.MongoClient(conf.connnectionString) # define database server with MongoClient. This works in localhost. db variale can can call with dBclient.db
 
     def __init__(self,dbName,collectionName):  #there is a initialize method which is taken two argument from out the method
         self.dbName = dbName  #Variables can pass method to method if it defines with self.

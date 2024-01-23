@@ -2,11 +2,12 @@ import threading
 from TCPServerClass import dBClient
 from TCPServerClass import gatewayServer
 
+from conf import Configuration as conf
+
 #This part is main thread 
-   
-def runSequence(serverIPAddress,serverPort):
+def runSequence(clientIPAddress,socket):
     
-    serverInterface = gatewayServer(serverIPAddress,serverPort) #serverInterface variable keeps class with gatewayServer initalize arguments
+    serverInterface = gatewayServer(clientIPAddress,socket) #serverInterface variable keeps class with gatewayServer initalize arguments
     serverInterface.createServerSocket() #creating Server socket with the method in the class
     serverInterface.listenSocket() #open to listen server socket with method in the class
     conn,addr = serverInterface.acceptConnection()   #connections is kept in conn and addr variables
@@ -14,14 +15,14 @@ def runSequence(serverIPAddress,serverPort):
     thread = threading.Thread(target=serverInterface.handle_client, args=(conn,addr)) #this is a threat that is targeting to handle_client methond in the gatewayServer class andwhen this threat works, defined arguments send to the method.
     thread.start() #threat is started with this method 
     print(f"Active Connections: {threading.active_count() - 1}") #active threats are shown with threading.active_count method
-    # return serverInterface
     
-serverIPAddress = "10.41.74.21" #local IP address.This variable needs to be local address where run Labview
-serverPort = 1234 #local port. This variable needs to add UGKB configuration
+    
+clientIPAddress = conf.clientIPAddress #local IP address.This variable needs to be local address where run Labview
+socket = conf.socket #local port. This variable needs to add UGKB configuration
 
-runSequence(serverIPAddress,serverPort)
+runSequence(clientIPAddress,socket)
 
-def deleteall(serverIPAddress,serverPort):
+def deleteall():
 
     rw = dBClient("ReactionWheelDB","Tachometer TM")
     rw.deleteRecord()

@@ -1,12 +1,10 @@
 import influxdb_client, os, time
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-import subprocess
+
 
 
 class influxDbClass:
-
-    # subprocess.run(r'C:\Users\kemal\Downloads\influxdb2-2.7.4-windows\influxd.exe')
 
   
     def __init__(self,token,org,url,bucket):

@@ -7,6 +7,7 @@ import os
 
 from databaseClass import dBClient
 from influxDbClass import influxDbClass
+from conf import Configuration as conf
 
 #Server Class to communicate between Gateway and UGKB 
 class gatewayServer: # This is a server which manages TCP/IP Server side.
@@ -91,7 +92,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
             for i in range(3, len(dataSplit)): #datasplit is a format of the list so  the loop loops from 3 to number of data  in the variable
                 key = f"CH {i-3}" # keep ch number in the key variable
                 result[interface][key] = dataSplit[i] #add datasplit list in the result variable as regard interface
-            print(result)
+            # print(result)
 
 
             resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
@@ -116,7 +117,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
                 dataSplit2 = dataSplit[i].split(seperator)
                 key = f"{keyname}{i-3}"
                 result[interface][key] = dataSplit2[dataIndex] 
-            print(result)
+            # print(result)
             resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
             JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
             
@@ -126,10 +127,10 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         
     def sendDataToInfluxDb(self,interface):
         # token = os.environ.get("INFLUXDB_TOKEN") #token bilgisi environment variable'e kaydedilmişti. os paketinden çekilir.
-        token = "0f48ad9a1c4a43af9643a3c77f6dc4b42df38ffe0d0368551629082a567e5587"
-        org = "tai"
-        url = "http://localhost:8086"
-        bucket = "labview"
+        token = conf.token
+        org = conf.org
+        url = conf.url
+        bucket = conf.bucket
 
         # influxDbClass sınıfının örneğini oluştur
         self.influxdatabase= influxDbClass(token, org, url, bucket)
@@ -138,7 +139,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         if self.dataSplit.startswith(interface):
             # print("Doğru")
             dataSplit = self.dataSplit.split(",")
-            print(dataSplit)
+            # print(dataSplit)
             
             self.influxdatabase.writeData(dataSplit[0],dataSplit[1],dataSplit[2],dataSplit[3],dataSplit[4],dataSplit[5])
 
