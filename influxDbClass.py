@@ -28,17 +28,17 @@ class influxDbClass:
        except Exception as ex:
           print("InfluxDb ile bağlantı sonlandırılamadı",ex)
 
-    def writeData(self, interface, date, time, value1, value2, value3):
+    def writeData(self, interface, key1, key2, key3, value1, value2, value3):
         try:
             write_api = self.write_client.write_api(write_options=SYNCHRONOUS)
             point = (
                 Point(interface)
-                .field("value1", float(value1))
-                .field("value2", float(value2))
-                .field("value3", float(value3))
+                .field(key1, float(value1))
+                .field(key2, float(value2))
+                .field(key3, float(value3))
             )
             write_api.write(bucket=self.bucket, org=self.org, record=point)
-            print("Veri gönderildi.")
+            # print("Veri gönderildi.")
         except Exception as ex:
             print("Veri gönderilemedi.", ex)
 
@@ -58,11 +58,12 @@ class influxDbClass:
                     Point("measurement1")
                     .tag("tagname1", "tagvalue1")
                     .field("field1", value)
+                    
                 )
                 write_api.write(bucket=bucket, org="TAI", record=point)
                 # time.sleep(1) # separate points by 1 second
 
-            print("Data gönderildi.")
+            # print("Data gönderildi.")
         except Exception as ex:
            print("Data gönderilemedi.", ex)
        

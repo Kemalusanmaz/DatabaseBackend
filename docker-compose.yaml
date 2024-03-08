@@ -1,0 +1,19 @@
+version: '3'
+services:
+
+  lvserver:
+    image: 10.41.74.27:5005/dss/labview-influx
+    restart: always
+    ports:
+      - "9898:9898"
+    networks:
+      - mongodb_network
+      - influxdb-grafana-trick-integration_default
+     
+networks:
+  mongodb_network:
+    external: true
+  influxdb-grafana-trick-integration_default:
+    external: true
+
+  

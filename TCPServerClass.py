@@ -20,6 +20,10 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         self.server_ip_address = server_ip_address #definition of server ip address which keeps in self.server_ip_address variable
         self.server_port = server_port #definition of server port which keeps in self.port variable
         self.socket = None #self.socket variable's value describes initially empty.
+        hostname = socket.gethostname()
+        # Host adını IP adresine çevir
+        self.server_ip = socket.gethostbyname(hostname)
+        print(self.server_ip,hostname)
 
     #Function of Creating Server Socket is using to create a Listener port to communicate with TC part of UGKB software.
     def createServerSocket(self): #There is no parameter which is taking by outside 
@@ -79,52 +83,60 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
 
      #Function of spliting data from Labview Client to sending database
     def splitDataToMongoDb_1(self,interface,dbname,collectionName,seperator):
-        if self.dataSplit.startswith(interface): # if received data starts with interface argument
-            dataSplit = self.dataSplit.split(seperator) #split the data as regard seperator
+        try:
+            if self.dataSplit.startswith(interface): # if received data starts with interface argument
+                dataSplit = self.dataSplit.split(seperator) #split the data as regard seperator
 
-            result = { #the data is converted json format
-                interface:{
-                "Date":dataSplit[1], #second and third parts of data returns date and time stirng 
-                "Time":dataSplit[2],
-                }}
-            
-            #channel number is different as regars interface for ex, there are three ch for torque tc but siz channel for asm
-            for i in range(3, len(dataSplit)): #datasplit is a format of the list so  the loop loops from 3 to number of data  in the variable
-                key = f"CH {i-3}" # keep ch number in the key variable
-                result[interface][key] = dataSplit[i] #add datasplit list in the result variable as regard interface
-            # print(result)
+                result = { #the data is converted json format
+                    interface:{
+                    "Date":dataSplit[1], #second and third parts of data returns date and time stirng 
+                    "Time":dataSplit[2],
+                    }}
+                
+                #channel number is different as regars interface for ex, there are three ch for torque tc but siz channel for asm
+                for i in range(3, len(dataSplit)): #datasplit is a format of the list so  the loop loops from 3 to number of data  in the variable
+                    key = f"CH {i-3}" # keep ch number in the key variable
+                    result[interface][key] = dataSplit[i] #add datasplit list in the result variable as regard interface
+                # print(result)
 
 
-            resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
-            # print(resultToJSON)
-            JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
-            # print(JSONtoString)
-            mongoDb = dBClient(dbname,collectionName) #define database client as db
-            
-            return mongoDb.insertRecord(JSONtoString) #insert data to the database
+                resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
+                # print(resultToJSON)
+                JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
+                # print(JSONtoString)
+                mongoDb = dBClient(dbname,collectionName) #define database client as db
+                
+                return mongoDb.insertRecord(JSONtoString) #insert data to the database
+        except Exception as ex:
+            # print("Gelen data tip 1 mongodb için ayrıştırılırken hata oluştu."+ ex)
+            print(ex)
         
     def splitDataToMongoDb_2(self,interface,dbname,collectionName,keyname,dataIndex,seperator):
-        if self.dataSplit.startswith(interface): # if received data starts with interface argument
-            dataSplit = self.dataSplit.split(";") #split the data as regard seperator
-            result = { #the data is converted json format
-                interface:{
-                "Date":dataSplit[1], #second and third parts of data returns date and time stirng 
-                "Time":dataSplit[2]
+        try:
+            if self.dataSplit.startswith(interface): # if received data starts with interface argument
+                dataSplit = self.dataSplit.split(";") #split the data as regard seperator
+                result = { #the data is converted json format
+                    interface:{
+                    "Date":dataSplit[1], #second and third parts of data returns date and time stirng 
+                    "Time":dataSplit[2]
+                    
+                        }}
                 
-                    }}
-            
-            for i in range(3, len(dataSplit)): #datasplit is a format of the list so  the loop loops from 3 to number of data  in the variable
-                dataSplit2 = dataSplit[i].split(seperator)
-                key = f"{keyname}{i-3}"
-                result[interface][key] = dataSplit2[dataIndex] 
-            # print(result)
-            resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
-            JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
-            
-            mongoDb = dBClient(dbname,collectionName) #define database client as db
-                        
-            return mongoDb.insertRecord(JSONtoString) #insert data to the database
-        
+                for i in range(3, len(dataSplit)): #datasplit is a format of the list so  the loop loops from 3 to number of data  in the variable
+                    dataSplit2 = dataSplit[i].split(seperator)
+                    key = f"{keyname}{i-3}"
+                    result[interface][key] = dataSplit2[dataIndex] 
+                # print(result)
+                resultToJSON = json.dumps(result,indent= 4, sort_keys=False) #convert dictionary data to JSON
+                JSONtoString = json.loads(resultToJSON) #convert json format to JSON string to insert data to the database
+                
+                mongoDb = dBClient(dbname,collectionName) #define database client as db
+                            
+                return mongoDb.insertRecord(JSONtoString) #insert data to the database
+        except Exception as ex:
+            # print("Gelen data tip 2 mongodb için ayrıştırılırken hata oluştu."+ ex)
+            print(ex)
+
     def sendDataToInfluxDb(self,interface):
         # token = os.environ.get("INFLUXDB_TOKEN") #token bilgisi environment variable'e kaydedilmişti. os paketinden çekilir.
         token = conf.token
@@ -132,17 +144,24 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         url = conf.url
         bucket = conf.bucket
 
-        # influxDbClass sınıfının örneğini oluştur
-        self.influxdatabase= influxDbClass(token, org, url, bucket)
-        self.influxdatabase.connectDb()
+        try:
+            # influxDbClass sınıfının örneğini oluştur
+            self.influxdatabase= influxDbClass(token, org, url, bucket)
+            self.influxdatabase.connectDb()
+        except Exception as ex:
+            # print("Influxdb'ye bağlanırken hata oluştur" + ex)
+            print(ex)
         
-        if self.dataSplit.startswith(interface):
-            # print("Doğru")
-            dataSplit = self.dataSplit.split(",")
-            # print(dataSplit)
-            
-            self.influxdatabase.writeData(dataSplit[0],dataSplit[1],dataSplit[2],dataSplit[3],dataSplit[4],dataSplit[5])
-
+        try:
+            if self.dataSplit.startswith(interface):
+                # print("Doğru")
+                dataSplit = self.dataSplit.split(",")
+                # print(dataSplit)
+                
+                self.influxdatabase.writeData(dataSplit[0],"CH0","CH1","CH2",dataSplit[3],dataSplit[4],dataSplit[5])
+        except Exception as ex:
+            # print("Gelen data influxdb için ayrıştırılırken hata oluştu."+ ex)
+            print(ex)
 
         
 
@@ -156,27 +175,33 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
 
                 self.receiveData() #receiving data from labview client 
 
-                for dataSplit in self.rcvData.split("\n"): #the data from labview is splitted according to seperator string whic is end pf line in this case
-
-                    if dataSplit == "exit": #If the splitted data is exit, break the loop, close the Server socket via closeSocket method in the Server class 
+                for self.dataSplit in self.rcvData.split("\n"): #the data from labview is splitted according to seperator string whic is end pf line in this case
+                    # print(self.dataSplit)
+                    if self.dataSplit == "exit": #If the splitted data is exit, break the loop, close the Server socket via closeSocket method in the Server class 
                         connected = False
-                        self.closeSocket()
+                        # self.closeSocket()
                         self.influxdatabase.disconnectDb()
                         
                         break
 
                     else: #otherwise
-                        self.dataSplit = str(dataSplit) #datasplit variable is converted self to using other methods in the class
+                        # self.dataSplit = str(dataSplit) #datasplit variable is converted self to using other methods in the class
 
                         if self.dataSplit != None: #if the datasplit variable is not null, call the splitDatatoDB method to sending data to defined collection in the database 
                             
-                            self.mongoDbData()
-                            self.influxDbData()
-
-                            
+                            self.process_data()                       
                     
         except Exception as ex:
-            print("Threat fonksiyonunda bir hata oluştu.",ex)        
+            # print("Threat fonksiyonunda bir hata oluştu." + ex)  
+            print(ex) 
+
+    def process_data(self):
+        with self.data_lock:
+            self.mongoDbData()
+            self.influxDbData()
+            
+            
+            pass      
 
 
     def mongoDbData(self):
@@ -198,7 +223,7 @@ class gatewayServer: # This is a server which manages TCP/IP Server side.
         self.sendDataToInfluxDb("Asm")
         self.sendDataToInfluxDb("Anv")
         self.sendDataToInfluxDb("Pt")
-        self.sendDataToInfluxDb("Pt")
+        
 
 
 

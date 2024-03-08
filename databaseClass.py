@@ -14,7 +14,8 @@ class dBClient: # A database class is made to manage structure
    
     def insertRecord(self,dataResult): # This is a method which manages inserting data to the database. This method takes one argument
         try:
-            self.collection.insert_one(dataResult) #dataResult variable is added bt insert_one method. self.collection represent relative collection. 
+            # self.collection.insert_one(dataResult) #dataResult variable is added bt insert_one method. self.collection represent relative collection. 
+            self.collection.insert_many([dataResult])
         except Exception as ex:
             print(ex)
  

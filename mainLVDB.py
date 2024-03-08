@@ -5,9 +5,10 @@ from TCPServerClass import gatewayServer
 from conf import Configuration as conf
 
 #This part is main thread 
-def runSequence(clientIPAddress,socket):
+def runSequence(serverIPAddress,socket):
     
-    serverInterface = gatewayServer(clientIPAddress,socket) #serverInterface variable keeps class with gatewayServer initalize arguments
+    print("Run Sequence started")
+    serverInterface = gatewayServer(serverIPAddress,socket) #serverInterface variable keeps class with gatewayServer initalize arguments
     serverInterface.createServerSocket() #creating Server socket with the method in the class
     serverInterface.listenSocket() #open to listen server socket with method in the class
     conn,addr = serverInterface.acceptConnection()   #connections is kept in conn and addr variables
@@ -17,10 +18,10 @@ def runSequence(clientIPAddress,socket):
     print(f"Active Connections: {threading.active_count() - 1}") #active threats are shown with threading.active_count method
     
     
-clientIPAddress = conf.clientIPAddress #local IP address.This variable needs to be local address where run Labview
+serverIPAddress = conf.serverIPAddress #local IP address.This variable needs to be local address where run Labview
 socket = conf.socket #local port. This variable needs to add UGKB configuration
 
-runSequence(clientIPAddress,socket)
+runSequence(serverIPAddress,socket)
 
 def deleteall():
 
